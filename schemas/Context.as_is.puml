@@ -1,0 +1,22 @@
+@startuml
+title CinemaAbyss Context diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "Пользователь", "Стриминговая платформа" )
+System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")
+System(MoviesService, "Сервис фильмы", "Метаданные, рейтинги, жанры")
+System(EventsService, "Шина сообщений", "Kafka")
+System(ProxyService, "Proxy API Gateway", "Маршрутизация трафика")
+
+
+
+Rel(user, ProxyService, "Доступ к платформе")
+Rel(ProxyService, MonolithSystem, "Трафик")
+Rel(MonolithSystem, EventsService, "Подписка/публикация событий")
+Rel(MoviesService, EventsService, "Подписка/публикация событий")
+Rel(ProxyService, MoviesService, "Трафик")
+
+@enduml
