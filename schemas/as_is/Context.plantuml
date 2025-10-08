@@ -3,20 +3,24 @@ title CinemaAbyss Context diagram
 
 top to bottom direction
 
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
 
-Person(user, "Пользователь", "Стриминговая платформа" )
+Person(User, "Пользователь", "Веб, приложение" )
 System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")
-System(MoviesService, "Сервис фильмы", "Метаданные, рейтинги, жанры")
-System(EventsService, "Шина сообщений", "Kafka")
-System(ProxyService, "Proxy API Gateway", "Маршрутизация трафика")
+SystemDb(postgres, "PostgreSQL", "Общая база данных")
 
+System_Boundary(InTheProcess, "В процессе") {
+  Deployment_Node("k8s", "Kubernetes Cluster") {
+    System(events, "Events Service", "Publish/Subscribe события")
+    System(kafka, "Kafka", "Брокер сообщений для событий")
+    System_Ext(ProxyService, "Proxy API Gateway", "Nodejs", "HTTP вход в кластер (маршрутизатор)")
+    Container(MoviesService, "Сервис фильмы", "Go", "Микросервис фильмов")
+  }
+}
 
+Rel(User, MonolithSystem, "Доступ к платформе")
+Rel(MonolithSystem, postgres, "Данные")
 
-Rel(user, ProxyService, "Доступ к платформе")
-Rel(ProxyService, MonolithSystem, "Трафик")
-Rel(MonolithSystem, EventsService, "Подписка/публикация событий")
-Rel(MoviesService, EventsService, "Подписка/публикация событий")
-Rel(ProxyService, MoviesService, "Трафик")
-
+SHOW_LEGEND()
+LAYOUT_WITH_LEGEND()
 @enduml
