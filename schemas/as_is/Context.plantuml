@@ -3,8 +3,9 @@ title CinemaAbyss Context diagram
 
 top to bottom direction
 
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
 
+!include ../lib/C4_Deployment.puml
 
 Person(User, "Пользователь", "Веб, приложение" )
 System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")

@@ -1,9 +1,8 @@
 @startuml
 title CinemaAbyss Container diagram
 
-top to bottom direction
-
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
+!include ../lib/C4_Deployment.puml
 
 
 Person(User, "Пользователь", "Пользователь онлайн сервиса")
@@ -31,20 +30,25 @@ Container_Boundary(CinemaAbyss, "Kubernetes Cluster (prod)"){
         Container(PaymentService, "Сервис обработки платежей", "Java", "платежи, чеки")
 
         Container(EventService, "Сервис Событий",  "Публикация, подписка событий через Kafka")
+        Container(Kafka, "Kafka шина данных", "Kafka Cluster", "Общение между сервисами событиями")
 
-        Container(MonolithSystem, "Монолит", "Легаси код, в эксплутации")
+        Container_Boundary(ACLMonolith, "Anti-Corruption Layer - Паттерн Душитель"){
+            Container(MonolithSystem, "Монолит", "Легаси код, в эксплутации")
+            SystemDb(MonolithDB, "БД монолита", "Единая база данных (старая)")
+        }
 
-        Container(Observability, "Мониторинг", "Prometheus + Grafana", "Метрики, логи, трассировки")
-        Container(ConfigSecretService, "Конфигурации и секреты",  "Управление конфигурациями и секретами")
-        Container(CICD, "Непрерывная интеграция и доставка", "GitHub / Gitlab, Jenkins", "Автоматические: сборка, тесты, развертывание (канареечное)")
+        SystemDb(MoviesDB, "БД сервиса метаданные фильмов", "Postgres")
+        SystemDb(SubscriptionsDB, "БД сервиса подписки", "Postgres")
+        SystemDb(ContentDB, "БД сервиса Контент", "Postgres")
+        SystemDb(PaymentDB, "БД сервиса Платежная система", "Postgres")
+        SystemDb(UsersDB, "БД сервиса Пользователей", "Postgres")
+
+        Container_Boundary(infrastructure, "Инфраструктура"){
+            Container(Monitoring, "Мониторинг", "Prometheus + Grafana", "Метрики, логи, трассировки")
+            Container(ConfigSecretService, "Конфигурации и секреты",  "Управление конфигурациями и секретами")
+            Container(CICD, "Непрерывная интеграция и доставка", "GitHub / Gitlab, Jenkins", "Автоматические: сборка, тесты, развертывание (канареечное)")
+        }
     }
-
-    SystemDb(MonolithDB, "БД монолита", "Единая база данных (старая)")
-    SystemDb(MoviesDB, "БД сервиса метаданные фильмов", "Postgres")
-    SystemDb(SubscriptionsDB, "БД сервиса подписки", "Postgres")
-    SystemDb(ContentDB, "БД сервиса Контент", "Postgres")
-    SystemDb(PaymentDB, "БД сервиса Платежная система", "Postgres")
-    SystemDb(UsersDB, "БД сервиса Пользователей", "Postgres")
 }
 
 Rel(User, WebPlatform, "API REST/Websocket")
@@ -55,8 +59,6 @@ Rel(WebPlatform, ProxyService, "API REST/Async")
 Rel(MobilePlatform, ProxyService, "API REST/Async")
 Rel(StreamingPlatform, ProxyService, "API REST/Async")
 
-Rel(ProxyService, AuthService, "Валидация токенов")
-
 Rel(ProxyService, BFFWeb, "API REST/Async")
 Rel(ProxyService, BFFMobile, "API REST/Async")
 Rel(ProxyService, BFFStreaming, "API REST/Async")
@@ -65,51 +67,28 @@ Rel(BFFWeb, EventService, "Публикация, подписка событий
 Rel(BFFMobile, EventService, "Публикация, подписка событий")
 Rel(BFFStreaming, EventService, "Публикация, подписка событий")
 
-Rel(ProxyService, MonolithSystem, "Постепенное сокращение трафика")
-Rel(MonolithSystem, MonolithDB, "Хранение")
+Rel(ProxyService, ACLMonolith, "Постепенное сокращение трафика")
+Rel(MonolithSystem, MonolithDB, "Чтение/запись")
 
-Rel(ProxyService, MoviesService, "Обмен событиями")
-Rel(MoviesService, MoviesDB, "Хранение")
+Rel(EventService, Kafka, "Публикация, подписка событий")
 
-Rel(ProxyService, SubscriptionService, "Обмен событиями")
-Rel(SubscriptionService, SubscriptionsDB, "Хранение")
+Rel(Kafka, MoviesService, "Обмен событиями")
+Rel(MoviesService, MoviesDB, "Чтение/запись")
 
-Rel(ProxyService, ContentService, "Обмен событиями")
-Rel(ContentService, ContentDB, "Хранение")
+Rel(Kafka, SubscriptionService, "Обмен событиями")
+Rel(SubscriptionService, SubscriptionsDB, "Чтение/запись")
 
-Rel(ProxyService, PaymentService, "Обмен событиями")
-Rel(PaymentService, PaymentDB, "Хранение")
+Rel(Kafka, ContentService, "Обмен событиями")
+Rel(ContentService, ContentDB, "Чтение/запись")
 
-Rel(ProxyService, AuthService, "Обмен событиями")
-Rel(ProxyService, UserService, "Обмен событиями")
-Rel(UserService, UsersDB, "Хранение")
+Rel(Kafka, PaymentService, "Обмен событиями")
+Rel(PaymentService, PaymentDB, "Чтение/запись")
 
-Rel(RecommendationSystem, EventService, "Публикация событий")
+Rel(Kafka, AuthService, "Обмен событиями")
+Rel(Kafka, UserService, "Обмен событиями")
+Rel(UserService, UsersDB, "Чтение/запись")
 
+Rel(RecommendationSystem, Kafka, "Публикация событий")
+
+Rel_Back(infrastructure, k8s, "Управление инфраструктурой")
 @enduml
-
-'Rel(BFFWeb, MoviesService, "REST / async (get metadata)")
-'Rel(BFFMobile, MoviesService, "REST / async")
-'Rel(BFFWeb, UserService, "REST (user profile)")
-'
-'Rel(BFFWeb, EventLib, "Publish events (user.actions, ui.metrics)")
-'Rel(BFFMobile, EventLib, "Publish events")
-'
-'Rel(EventLib, Kafka, "Produce / Consume events")
-'Rel(CDC, Kafka, "Publish DB changes from Monolith")
-'Rel(CDC, MonolithDB, "Read DB change stream")
-'
-'Rel(Kafka, MoviesService, "Consume events (populate local read DB)")
-'Rel(Kafka, SubscriptionService, "Consume events")
-'Rel(Kafka, RecommendationSystem, "Publish/subscribe (optional)")
-'
-'Rel(Monolith, MonolithDB, "Reads/Writes")
-'Rel(Monolith, CDC, "DB binlog -> Debezium")
-'
-'Rel(PaymentService, PaymentsDB, "Writes/reads")
-'Rel(UserService, UsersDB, "Writes/reads")
-'Rel(MoviesService, MoviesDB, "Writes/reads")
-'Rel(SubscriptionService, SubscriptionsDB, "Writes/reads")
-'
-'RelAll(Observability, "Collect metrics/logs/traces from all containers")
-'RelAll(ConfigVault, "Provide secrets/config to K8s workloads")
