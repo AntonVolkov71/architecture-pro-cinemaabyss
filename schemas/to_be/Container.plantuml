@@ -3,68 +3,113 @@ title CinemaAbyss Container diagram
 
 top to bottom direction
 
-!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
-
-Person(User, "Пользователь", "Веб, приложение" )
-System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")
-SystemDb(postgres, "PostgreSQL", "Общая база данных")
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
 
 
-System_Boundary(InTheProcess, "В процессе") {
-  System_Boundary(k8s, "Kubernetes Cluster") {
-    System(events, "Events Service", "Publish/Subscribe события")
-    System(kafka, "Kafka", "Брокер сообщений для событий")
-    System_Ext(ProxyService, "Proxy API Gateway", "Nodejs", "HTTP вход в кластер (маршрутизатор)")
-    Container(MoviesService, "Сервис фильмы", "Go", "Микросервис фильмов")
-  }
+Person(User, "Пользователь", "Пользователь онлайн сервиса")
+System_Ext(RecommendationSystem, "Внешняя рекомендательная система", "Рекомендации, подборки")
+
+System(CinemaAbyss, "Кинобездна", "Стриминговый сервис")
+
+Container_Boundary(CinemaAbyss, "Kubernetes Cluster (prod)"){
+    Deployment_Node(k8s, "Kubernetes Cluster") {
+        Container(ProxyService, "Proxy API Gateway", "Kong, NGINX",  "Аутентификация, роутинг, канареечные релизы")
+
+        Container(WebPlatform, "Веб платформа", "Javascript", "Вебсайт платформы" )
+        Container(MobilePlatform, "Мобильное приложение", "Java", "Телефон, планшет")
+        Container(StreamingPlatform, "Стриминг платформа", "Nodejs", "Smart TV, Smart TV-приставка")
+
+        Container(BFFWeb, "BFF - Web", "Nodejs", "Агрегация данных для веб-клиента")
+        Container(BFFMobile, "BFF - Mobile", "Nodejs, Java", "Агрегация данных мобильных клиентов")
+        Container(BFFStreaming, "BFF - Streaming", "Nodejs, Java", "Агрегация данных для стриминга")
+
+        Container(AuthService, "Сервис Авторизации", "Java", "Аутентификация, идентификация, токены")
+        Container(UserService, "Сервис Пользователей", "Java", "Профили пользователей")
+        Container(MoviesService, "Сервис метаданные фильмов", "Go", "Метаданные: актеры, жанры")
+        Container(ContentService, "Контент сервис", "Go", "Хранилище фильмов, ролики и т.д.")
+        Container(SubscriptionService, "Сервис Подписок", "Go", "Подписки, скидки")
+        Container(PaymentService, "Сервис обработки платежей", "Java", "платежи, чеки")
+
+        Container(EventService, "Сервис Событий",  "Публикация, подписка событий через Kafka")
+
+        Container(MonolithSystem, "Монолит", "Легаси код, в эксплутации")
+
+        Container(Observability, "Мониторинг", "Prometheus + Grafana", "Метрики, логи, трассировки")
+        Container(ConfigSecretService, "Конфигурации и секреты",  "Управление конфигурациями и секретами")
+        Container(CICD, "Непрерывная интеграция и доставка", "GitHub / Gitlab, Jenkins", "Автоматические: сборка, тесты, развертывание (канареечное)")
+    }
+
+    SystemDb(MonolithDB, "БД монолита", "Единая база данных (старая)")
+    SystemDb(MoviesDB, "БД сервиса метаданные фильмов", "Postgres")
+    SystemDb(SubscriptionsDB, "БД сервиса подписки", "Postgres")
+    SystemDb(ContentDB, "БД сервиса Контент", "Postgres")
+    SystemDb(PaymentDB, "БД сервиса Платежная система", "Postgres")
+    SystemDb(UsersDB, "БД сервиса Пользователей", "Postgres")
 }
 
-System(WarmHouseSystem, "Теплый дом", "Система удаленного управления теплым домом")
-System(WarmHouseSystemFuture, "Теплый дом развитие", "Сервисы, системы расширения")
+Rel(User, WebPlatform, "API REST/Websocket")
+Rel(User, MobilePlatform, "API REST/Websocket")
+Rel(User, StreamingPlatform, "API REST/Websocket")
 
-Container_Boundary(WarmHouseSystem, "Теплый дом") {
-  Container(WebApp, "Web Application", "JavaScript, Node.js", "Интерфейс управления системой")
-  Container(api, "API", "Node.js", "Обработка запросов клиентов и администратора")
-  Container(auth, "Сервис авторизации", "Node.js", "Авторизация и аутентификация пользователей")
-  Container(MessageBroker, "Шина данных между сервисами", "RabbitMQ", "Управление сообщениями между сервисами")
-  Container(DeviceManagementSystem, "Система управления устройствами", "Node.js", "Управляет логикой взаимодействия устройствами")
-  Container(ConnectToDeviceServices, "Сервисы подключения по протоколам", "Socket, Zigbee, Wi-Fi", "Подключение по протоколу")
-  Container(TelemetryService, "Telemetry Service", "Node.js / Java", "Сбор и обработка телеметрии от устройств")
+Rel(WebPlatform, ProxyService, "API REST/Async")
+Rel(MobilePlatform, ProxyService, "API REST/Async")
+Rel(StreamingPlatform, ProxyService, "API REST/Async")
 
-  Container(DatabaseUser, "БД пользователй", "PostgreSQL", "Хранение информации о пользователях")
-  Container(DatabaseSensors, "БД датчиков", "PostgreSQL", "Хранение датчиков")
-  Container(DatabaseTelemetry, "БД данные от датчиков", "PostgreSQL", "Хранение информации о датчиках")
-}
+Rel(ProxyService, AuthService, "Валидация токенов")
 
-Container_Boundary(WarmHouseSystemFuture, "Теплый дом развитие") {
-  Container(IntegrationProtocolsSDK, "Универсальная система интеграция SDK", "Java, C++", "Внешние системы")
-  Container(CommandScripts, "Система управления сценариями команд", "Java", "Команда 1 -> Действие 1 -> Действие 2")
-}
+Rel(ProxyService, BFFWeb, "API REST/Async")
+Rel(ProxyService, BFFMobile, "API REST/Async")
+Rel(ProxyService, BFFStreaming, "API REST/Async")
 
-System_Ext(sensors, "Устройства умного дома", "Управляет датчиками")
+Rel(BFFWeb, EventService, "Публикация, подписка событий")
+Rel(BFFMobile, EventService, "Публикация, подписка событий")
+Rel(BFFStreaming, EventService, "Публикация, подписка событий")
 
-Rel(user, WebApp, "Управление")
-Rel(admin, WebApp, "Обслуживание системы")
-Rel(WebApp, auth, "Авторизация и аутентификация")
-Rel(auth, DatabaseUser, "Запросы пользователей")
-Rel(auth, api, "Передача токена")
-Rel(api, DeviceManagementSystem, "Запросы команд управления устройствами")
-Rel(DeviceManagementSystem, MessageBroker, "публикация команд для устройств")
-Rel(DeviceManagementSystem, DatabaseSensors, "Создает/Читает/Обновляет/Удаляет данные по устройству")
+Rel(ProxyService, MonolithSystem, "Постепенное сокращение трафика")
+Rel(MonolithSystem, MonolithDB, "Хранение")
 
-Rel(sensors, ConnectToDeviceServices, "Соединение, телеметрия")
-Rel(ConnectToDeviceServices, MessageBroker, "публикация телеметрии")
-Rel(MessageBroker, TelemetryService, "subscribe - подписка телеметрии")
-Rel(TelemetryService, DatabaseTelemetry, "сохранение телеметрии")
+Rel(ProxyService, MoviesService, "Обмен событиями")
+Rel(MoviesService, MoviesDB, "Хранение")
 
+Rel(ProxyService, SubscriptionService, "Обмен событиями")
+Rel(SubscriptionService, SubscriptionsDB, "Хранение")
 
+Rel(ProxyService, ContentService, "Обмен событиями")
+Rel(ContentService, ContentDB, "Хранение")
 
-Rel(User, MonolithSystem, "Доступ к платформе")
-Rel(MonolithSystem, postgres, "Данные")
+Rel(ProxyService, PaymentService, "Обмен событиями")
+Rel(PaymentService, PaymentDB, "Хранение")
 
+Rel(ProxyService, AuthService, "Обмен событиями")
+Rel(ProxyService, UserService, "Обмен событиями")
+Rel(UserService, UsersDB, "Хранение")
 
+Rel(RecommendationSystem, EventService, "Публикация событий")
 
-
-SHOW_LEGEND()
-LAYOUT_WITH_LEGEND()
 @enduml
+
+'Rel(BFFWeb, MoviesService, "REST / async (get metadata)")
+'Rel(BFFMobile, MoviesService, "REST / async")
+'Rel(BFFWeb, UserService, "REST (user profile)")
+'
+'Rel(BFFWeb, EventLib, "Publish events (user.actions, ui.metrics)")
+'Rel(BFFMobile, EventLib, "Publish events")
+'
+'Rel(EventLib, Kafka, "Produce / Consume events")
+'Rel(CDC, Kafka, "Publish DB changes from Monolith")
+'Rel(CDC, MonolithDB, "Read DB change stream")
+'
+'Rel(Kafka, MoviesService, "Consume events (populate local read DB)")
+'Rel(Kafka, SubscriptionService, "Consume events")
+'Rel(Kafka, RecommendationSystem, "Publish/subscribe (optional)")
+'
+'Rel(Monolith, MonolithDB, "Reads/Writes")
+'Rel(Monolith, CDC, "DB binlog -> Debezium")
+'
+'Rel(PaymentService, PaymentsDB, "Writes/reads")
+'Rel(UserService, UsersDB, "Writes/reads")
+'Rel(MoviesService, MoviesDB, "Writes/reads")
+'Rel(SubscriptionService, SubscriptionsDB, "Writes/reads")
+'
+'RelAll(Observability, "Collect metrics/logs/traces from all containers")
+'RelAll(ConfigVault, "Provide secrets/config to K8s workloads")

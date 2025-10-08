@@ -12,9 +12,9 @@ SystemDb(postgres, "PostgreSQL", "Общая база данных")
 
 System_Boundary(InTheProcess, "В процессе") {
   Deployment_Node("k8s", "Kubernetes Cluster") {
-    System(events, "Events Service", "Publish/Subscribe события")
+    System(EventService, "Events Service", "Publish/Subscribe события")
     System(kafka, "Kafka", "Брокер сообщений для событий")
-    System_Ext(ProxyService, "Proxy API Gateway", "Nodejs", "HTTP вход в кластер (маршрутизатор)")
+    System(ProxyService, "Proxy API Gateway", "HTTP вход в кластер (маршрутизатор)")
     Container(MoviesService, "Сервис фильмы", "Go", "Микросервис фильмов")
   }
 }
