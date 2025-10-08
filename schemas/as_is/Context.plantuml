@@ -5,6 +5,7 @@ top to bottom direction
 
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
 
+
 Person(User, "Пользователь", "Веб, приложение" )
 System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")
 SystemDb(postgres, "PostgreSQL", "Общая база данных")
