@@ -30,6 +30,6 @@ RUN npm install --production
 RUN npm install --production
 
 # Expose the port the app runs on
-EXPOSE 8081
+EXPOSE 8000
 
 CMD ["node", "dist/index.js"]

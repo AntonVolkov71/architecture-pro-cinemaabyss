@@ -7,25 +7,33 @@ class Config {
         return Number(process.env.PORT) || 8000;
     }
 
+    urlApi(): string {
+        return '/api'
+    }
+
+    urlHealth(): string {
+        return '/health'
+    }
+
     monolithUrl(): string {
-        return process.env.MONOLITH_URL || "http://monolith:8080"
+        return process.env.MONOLITH_URL || "http://localhost:8080"
     }
 
     moviesServiceUrl(): string {
-        return process.env.MOVIES_SERVICE_URL || "http://movies-service:8081"
+        return process.env.MOVIES_SERVICE_URL || "http://localhost:8081"
     }
 
     eventServiceUrl(): string {
-        return process.env.EVENTS_SERVICE_URL || "http://events-service:8082"
+        return process.env.EVENTS_SERVICE_URL || "http://localhost:8082"
     }
 
-     gradualMigration(): boolean {
+    gradualMigration(): boolean {
         const gradualMigration = process.env.GRADUAL_MIGRATION || "";
 
         return gradualMigration.toLowerCase() === "true"
     }
 
-    moviesMigrationPercent():number{
+    moviesMigrationPercent(): number {
         return Number(process.env.MOVIES_MIGRATION_PERCENT) || 0;
     }
 }
