@@ -1,18 +1,21 @@
 'use strict';
 
 import express from 'express';
-import exampleRouter from './routes';
+import proxyRouter from './routes';
 import Config from "./config";
 
 const app = express();
 
 const port = Config.portApp();
+const urlApi = Config.urlApi();
+const urlHealth = Config.urlHealth();
 
+
+app.use(urlApi, proxyRouter);
 app.use(express.json());
 
-app.use('/api/', exampleRouter);
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok' });
+app.get(urlHealth, (req, res) => {
+    res.json({status: 'ok'});
 });
 
 app.listen(port, () => {

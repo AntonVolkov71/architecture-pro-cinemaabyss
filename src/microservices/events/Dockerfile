@@ -29,7 +29,4 @@ RUN npm install --production
 # Install necessary runtime dependencies
 RUN npm install --production
 
-# Expose the port the app runs on
-EXPOSE 8000
-
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/main.js"]

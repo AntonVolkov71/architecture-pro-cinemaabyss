@@ -1,32 +1,50 @@
-import { Router, Request, Response } from 'express';
+import {NextFunction, Request, Response, Router} from 'express';
+import {createProxyMiddleware} from 'http-proxy-middleware';
 import Config from "./config";
+
+enum Resources {
+    MOVIES = 'movies',
+    EVENTS = 'events'
+}
 
 const router = Router();
 
-// enum Resources {
-//     MOVIES='movies'
-// }
+router.use((req: Request, res: Response, next) => {
+    const originalUrl = req.originalUrl;
+    let redirectUrl = Config.monolithUrl()
 
-router.get('/:resource', (req: Request, res: Response) => {
-    const resource = req.params.resource;
-    console.log('resource',resource)
-    const urlMovies= Config.moviesServiceUrl()
+    if (!Config.gradualMigration()) {
+        return proxy(req, res, next, redirectUrl)
+    }
+    if (routedToNewService()) {
+        if (originalUrl.toLowerCase().includes(Resources.MOVIES)) {
+            console.info("Redirect to movies");
+            redirectUrl = Config.moviesServiceUrl();
+        }
+    }
+    
+    if (originalUrl.toLowerCase().includes(Resources.EVENTS)) {
+        console.info("Redirect to events");
+        redirectUrl = Config.eventServiceUrl();
+    }
 
-    res.redirect(urlMovies)
-    // switch (resource) {
-    //     case Resources.MOVIES:
-    //         proxyMovies(req,res )
-    //         break
-    // }
-    // const data = {
-    //     data: "hello"
-    // }
-    //
-    // res.json(data);
+    console.info("redirect URL:", redirectUrl)
+
+    return proxy(req, res, next, redirectUrl)
 });
 
-// function proxyMovies(req: Request, res: Response){
-//     res.redirect(urlMovies)
-// }
+function routedToNewService(): boolean {
+    return Math.random() * 100 < Config.moviesMigrationPercent();
+}
+
+function proxy(req: Request, res: Response, next: NextFunction, redirectUrl: string) {
+    const dynamicProxy = createProxyMiddleware({
+        target: redirectUrl,
+        changeOrigin: true,
+        pathRewrite: (path, req: Request) => req.originalUrl,
+    });
+
+    return dynamicProxy(req, res, next);
+}
 
 export default router;
