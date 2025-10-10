@@ -5,6 +5,8 @@ import {AllExceptionFilter} from './common/filters/allExceptionFilter';
 import {AppConfigService} from './configuration/app/config.service';
 import {NestExpressApplication} from '@nestjs/platform-express';
 import {Routes} from "./type/routes";
+import {Transport} from "@nestjs/microservices";
+import {BrokerConfigService} from "./configuration/broker/config.service";
 
 async function bootstrap() {
   // Создание сервера
@@ -12,8 +14,35 @@ async function bootstrap() {
     bufferLogs: true,
   });
 
-
   app.setGlobalPrefix(Routes.API + Routes.EVENTS);
+  app.useGlobalFilters(new AllExceptionFilter());
+
+  const brokerConfig: BrokerConfigService = app.get(BrokerConfigService);
+
+  app.connectMicroservice({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        brokers: [brokerConfig.kafkaBrokers()],
+        retry: {
+          retries: 2,
+          initialRetryTime: 1000,
+        }
+      },
+      consumer: {
+        groupId: 'events',
+        sessionTimeout: 30000,
+        heartbeatInterval: 10000,
+        rebalanceTimeout: 60000,
+      },
+      subscribe: {
+        fromBeginning: true,
+      },
+      run: {
+        autoCommit: false,
+      }
+    },
+  });
 
   // Получение данных из конфига
   const appConfig: AppConfigService = app.get(AppConfigService);
@@ -21,7 +50,7 @@ async function bootstrap() {
   const nameApplication = appConfig.nameApplication();
   const logger = new Logger(nameApplication);
 
-  app.useGlobalFilters(new AllExceptionFilter());
+  await app.startAllMicroservices();
 
   // Запуск сервера
   app

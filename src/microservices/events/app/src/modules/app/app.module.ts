@@ -7,20 +7,22 @@ import {PaymentModule} from "../payment/payment.module";
 import {MovieModule} from "../movie/movie.module";
 import {UserModule} from "../user/user.module";
 import {AppController} from "./app.controller";
-import {HeroesController} from "./kafka.controller";
+import {BrokerConfigModule} from "../../configuration/broker/config.module";
+import {KafkaModule} from "../kafka/kafka.module";
 
 @UseFilters(AllExceptionFilter)
 @Module({
   imports: [
     AppConfigModule,
+    BrokerConfigModule,
     ConfigModuleForApp,
-    // V1Module,
     PaymentModule,
     MovieModule,
     UserModule,
+    KafkaModule
   ],
   providers: [AppService],
-  controllers: [AppController, HeroesController],
+  controllers: [AppController]
 })
 export class AppModule implements OnApplicationBootstrap {
   constructor(private readonly appService: AppService) {
