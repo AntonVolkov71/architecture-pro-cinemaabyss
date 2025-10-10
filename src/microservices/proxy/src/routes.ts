@@ -16,6 +16,7 @@ router.use((req: Request, res: Response, next) => {
     if (!Config.gradualMigration()) {
         return proxy(req, res, next, redirectUrl)
     }
+
     if (routedToNewService()) {
         if (originalUrl.toLowerCase().includes(Resources.MOVIES)) {
             console.info("Redirect to movies");

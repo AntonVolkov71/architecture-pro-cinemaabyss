@@ -4,12 +4,16 @@ import {Logger} from '@nestjs/common';
 import {AllExceptionFilter} from './common/filters/allExceptionFilter';
 import {AppConfigService} from './configuration/app/config.service';
 import {NestExpressApplication} from '@nestjs/platform-express';
+import {Routes} from "./type/routes";
 
 async function bootstrap() {
   // Создание сервера
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+
+
+  app.setGlobalPrefix(Routes.API + Routes.EVENTS);
 
   // Получение данных из конфига
   const appConfig: AppConfigService = app.get(AppConfigService);
