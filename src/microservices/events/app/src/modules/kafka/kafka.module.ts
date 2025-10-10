@@ -21,6 +21,7 @@ import {ConfigService} from "@nestjs/config";
         },
       });
     },
+    
     inject: [ConfigService], // Укажите зависимости для инъекции
   },
     KafkaProducerService,
