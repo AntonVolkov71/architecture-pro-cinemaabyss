@@ -25,7 +25,7 @@ async function bootstrap() {
       client: {
         brokers: [brokerConfig.kafkaBrokers()],
         retry: {
-          retries: 2,
+          retries: 5,
           initialRetryTime: 1000,
         }
       },
@@ -34,6 +34,11 @@ async function bootstrap() {
         sessionTimeout: 30000,
         heartbeatInterval: 10000,
         rebalanceTimeout: 60000,
+        maxWaitTimeInMs: 5000,
+        retry: {
+          retries: 5,
+          initialRetryTime: 1000,
+        }
       },
       subscribe: {
         fromBeginning: true,

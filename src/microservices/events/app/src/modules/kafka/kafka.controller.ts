@@ -17,5 +17,7 @@ export class KafkaController {
     const value = originalMessage.value?.toString();
     console.log('message', message)
     console.log('value', value)
+
+    return "success"
   }
 }
