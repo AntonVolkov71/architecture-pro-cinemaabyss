@@ -149,6 +149,8 @@ jobs:
 Как только сборка отработает и в github registry появятся ваши образы, можно переходить к блоку настройки Kubernetes
 Успешным результатом данного шага является "зеленая" сборка и "зеленые" тесты
 
+![Actions all flows.jpg](assets/Actions%20all%20flows.jpg)
+
 ### Proxy в Kubernetes
 
 #### Шаг 1
@@ -345,6 +347,9 @@ zookeeper-0 1/1 Running
 
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и скриншот вывода event-service
 после вызова тестов.
+
+- [test_screenshot from Kubernetes.jpg](assets/test_screenshot%20from%20Kubernetes.jpg)
+- ![test_screenshot from Kubernetes.jpg](assets/test_screenshot%20from%20Kubernetes.jpg)
 
 ## Задание 4
 

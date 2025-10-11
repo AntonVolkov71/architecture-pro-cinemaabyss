@@ -148,17 +148,6 @@ services:
     networks:
       - cinemaabyss-network
 
-  # Tests
-  test:
-    build:
-      context: ./tests/postman
-      dockerfile: Dockerfile
-    container_name: cinemaabyss-test
-    depends_on:
-      - proxy-service
-    networks:
-      - cinemaabyss-network
-
   # Kafka UI for monitoring Kafka
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
