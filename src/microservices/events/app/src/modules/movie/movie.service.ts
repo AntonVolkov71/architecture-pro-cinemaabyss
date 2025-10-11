@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {MovieCreateDto, MoviesType} from "../../type/movie.type";
 import {KafkaProducerService} from "../kafka/kafka_producer.service";
+import {ContactEvent} from "../../assets/contract";
 
 @Injectable()
 export class MovieService {
@@ -27,7 +28,7 @@ export class MovieService {
       data: entity
     }
 
-    await this.kafkaProducerService.sendMessage("movie-events", JSON.stringify(message))
+    await this.kafkaProducerService.sendMessage(ContactEvent.MOVIE_EVENTS, JSON.stringify(message))
 
     return {
       ...entity,

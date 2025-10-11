@@ -1,16 +1,17 @@
 import {Controller} from "@nestjs/common";
 import {Ctx, KafkaContext, MessagePattern} from "@nestjs/microservices";
+import {ContactEvent} from "../../assets/contract";
 
 @Controller()
 export class MovieKafkaController {
-  @MessagePattern('movie-events')
+  @MessagePattern(ContactEvent.MOVIE_EVENTS)
   consumeMovieEvent(@Ctx() context: KafkaContext) {
-    const originalMessage = context.getMessage();
-    const value = originalMessage.value?.toString();
     try {
-      const parseValue = JSON.parse(value || '{}')
+      const originalMessage = context.getMessage();
+      const value = originalMessage.value?.toString();
+      const parseValue = JSON.parse(JSON.parse(value as string || '{}'));
 
-      console.info('MovieKafka ', parseValue)
+      console.info('Movie consumer', ContactEvent.MOVIE_EVENTS, parseValue)
 
       return {
         "status": "success"

@@ -12,7 +12,7 @@ export class PaymentController {
 
   @Get('/')
   public index(@Query('user_id') user_id?: number,) {
-    console.info('Request: get payments', user_id)
+    console.info('HTTP:', Routes.PAYMENT, user_id)
 
     return this.paymentService.index(user_id);
   }
@@ -20,7 +20,7 @@ export class PaymentController {
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   public create(@Body() body: PaymentsCreateDto) {
-    console.info('Request create payment', body)
+    console.info('HTTP:',Routes.PAYMENT, body)
 
     return this.paymentService.create(body);
   }

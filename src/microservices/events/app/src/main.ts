@@ -44,7 +44,7 @@ async function bootstrap() {
         fromBeginning: true,
       },
       run: {
-        autoCommit: false,
+        autoCommit: true,
       }
     },
   });

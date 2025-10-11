@@ -13,7 +13,7 @@ export class MovieController {
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   public create(@Body() body: MovieCreateDto) {
-    console.info('Request:', Routes.MOVIE, body);
+    console.info('HTTP:', Routes.MOVIE, body);
 
     return this.movieService.create(body);
   }

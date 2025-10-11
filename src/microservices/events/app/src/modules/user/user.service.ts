@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {UserCreateDto, UserType} from "../../type/user.type";
 import {KafkaProducerService} from "../kafka/kafka_producer.service";
+import {ContactEvent} from "../../assets/contract";
 
 @Injectable()
 export class UserService {
@@ -26,7 +27,7 @@ export class UserService {
       data: entity
     }
 
-    await this.kafkaProducerService.sendMessage("user-events", JSON.stringify(message))
+    await this.kafkaProducerService.sendMessage(ContactEvent.USER_EVENTS, JSON.stringify(message))
 
     return {
       ...entity,

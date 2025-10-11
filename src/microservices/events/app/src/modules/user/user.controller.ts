@@ -13,7 +13,7 @@ export class UserController {
   @Post('/')
   @HttpCode(HttpStatus.CREATED)
   public create(@Body() body: UserCreateDto) {
-    console.info('Request create user', body)
+    console.info('HTTP:', Routes.USER, body)
 
     return this.userService.create(body);
   }
