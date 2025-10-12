@@ -480,13 +480,24 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.25/samp
 ```bash
 FORTIO_POD=$(kubectl get pod -n cinemaabyss | grep fortio | awk '{print $1}')
 
-kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
-```
+- for windows Shell
+$FORTIO_POD = kubectl get pods -n cinemaabyss | Select-String "fortio" | ForEach-Object { $_.ToString().Split()[0] }
+Write-Host "Fortio Pod: $FORTIO_POD"
 
-Например,
+kubectl exec -n cinemaabyss $FORTIO_POD -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
+
+```
+- [Circuit Breaker в действии.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8.txt)
+  ![Circuit Breaker в действии](img.png)
+
+- [Circuit Breaker в действии второй тест.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8%20%D0%B2%D1%82%D0%BE%D1%80%D0%BE%D0%B9%20%D1%82%D0%B5%D1%81%D1%82.txt) [Circuit Breaker в действии.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8.txt)
+
+- Например,
 
 ```bash
+
 kubectl exec -n cinemaabyss fortio-deploy-b6757cbbb-7c9qg  -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
+kubectl exec -n cinemaabyss fortio-deploy-5c948d95cf-hcr9k  -c fortio -- fortio load -c 50 -qps 0 -n 500 -loglevel Warning http://movies-service:8081/api/movies
 ```
 
 Вывод будет типа такого
@@ -503,7 +514,12 @@ Code 503 : 399 (79.8 %)
 
 ```bash
 kubectl exec -n cinemaabyss fortio-deploy-b6757cbbb-7c9qg -c istio-proxy -- pilot-agent request GET stats | grep movies-service | grep pending
+
+- for windy
+ kubectl exec -n cinemaabyss fortio-deploy-5c948d95cf-hcr9k -c istio-proxy -- pilot-agent request GET stats | Select-String "movies-service" | Select-String "pending"
+ 
 ```
+- [Circuit Breaker в действии есче статистика.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8%20%D0%B5%D1%81%D1%87%D0%B5%20%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0.txt)
 
 И там смотрим
 
@@ -513,10 +529,18 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+- [Circuit Breaker в действии.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8.txt)
+ ![Circuit Breaker в действии](img.png)
 
-Удаляем все
+- [Circuit Breaker в действии второй тест.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8%20%D0%B2%D1%82%D0%BE%D1%80%D0%BE%D0%B9%20%D1%82%D0%B5%D1%81%D1%82.txt) [Circuit Breaker в действии.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8.txt)
+
+- [Circuit Breaker в действии есче статистика.txt](assets/Circuit%20Breaker%20%D0%B2%20%D0%B4%D0%B5%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D0%B8%20%D0%B5%D1%81%D1%87%D0%B5%20%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0.txt)
+![Circuit Breaker  статистика.jpg](assets/Circuit%20Breaker%20%20%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0.jpg)
+
+- Удаляем все
 
 ```bash
+choco install istioctl
 istioctl uninstall --purge
 kubectl delete namespace istio-system
 kubectl delete all --all -n cinemaabyss
