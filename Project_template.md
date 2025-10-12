@@ -433,6 +433,14 @@ minikube tunnel
 Потом вызовите
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
+- [helm status pods and run minikube tunnel.jpg](assets/helm%20status%20pods%20and%20run%20minikube%20tunnel.jpg)
+![helm status pods and run minikube tunnel.jpg](assets/helm%20status%20pods%20and%20run%20minikube%20tunnel.jpg)
+
+- ![HELM get movies.jpg](assets/HELM%20get%20movies.jpg)
+![HELM get movies.jpg](assets/HELM%20get%20movies.jpg)
+
+- ![HELM health events.jpg](assets/HELM%20health%20events.jpg)
+![HELM health events.jpg](assets/HELM%20health%20events.jpg)
 
 # Задание 5
 
