@@ -1,0 +1,94 @@
+@startuml
+title CinemaAbyss Container diagram
+
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
+!include ../lib/C4_Deployment.puml
+
+
+Person(User, "Пользователь", "Пользователь онлайн сервиса")
+System_Ext(RecommendationSystem, "Внешняя рекомендательная система", "Рекомендации, подборки")
+
+System(CinemaAbyss, "Кинобездна", "Стриминговый сервис")
+
+Container_Boundary(CinemaAbyss, "Kubernetes Cluster (prod)"){
+    Deployment_Node(k8s, "Kubernetes Cluster") {
+        Container(ProxyService, "Proxy API Gateway", "Kong, NGINX",  "Аутентификация, роутинг, канареечные релизы")
+
+        Container(WebPlatform, "Веб платформа", "Javascript", "Вебсайт платформы" )
+        Container(MobilePlatform, "Мобильное приложение", "Java", "Телефон, планшет")
+        Container(StreamingPlatform, "Стриминг платформа", "Nodejs", "Smart TV, Smart TV-приставка")
+
+        Container(BFFWeb, "BFF - Web", "Nodejs", "Агрегация данных для веб-клиента")
+        Container(BFFMobile, "BFF - Mobile", "Nodejs, Java", "Агрегация данных мобильных клиентов")
+        Container(BFFStreaming, "BFF - Streaming", "Nodejs, Java", "Агрегация данных для стриминга")
+
+        Container(AuthService, "Сервис Авторизации", "Java", "Аутентификация, идентификация, токены")
+        Container(UserService, "Сервис Пользователей", "Java", "Профили пользователей")
+        Container(MoviesService, "Сервис метаданные фильмов", "Go", "Метаданные: актеры, жанры")
+        Container(ContentService, "Контент сервис", "Go", "Хранилище фильмов, ролики и т.д.")
+        Container(SubscriptionService, "Сервис Подписок", "Go", "Подписки, скидки")
+        Container(PaymentService, "Сервис обработки платежей", "Java", "платежи, чеки")
+
+        Container(EventService, "Сервис Событий",  "Публикация, подписка событий через Kafka")
+        Container(Kafka, "Kafka шина данных", "Kafka Cluster", "Общение между сервисами событиями")
+
+        Container_Boundary(ACLMonolith, "Anti-Corruption Layer - Паттерн Душитель"){
+            Container(MonolithSystem, "Монолит", "Легаси код, в эксплутации")
+            SystemDb(MonolithDB, "БД монолита", "Единая база данных (старая)")
+        }
+
+        SystemDb(MoviesDB, "БД сервиса метаданные фильмов", "Postgres")
+        SystemDb(SubscriptionsDB, "БД сервиса подписки", "Postgres")
+        SystemDb(ContentDB, "БД сервиса Контент", "Postgres")
+        SystemDb(PaymentDB, "БД сервиса Платежная система", "Postgres")
+        SystemDb(UsersDB, "БД сервиса Пользователей", "Postgres")
+
+        Container_Boundary(infrastructure, "Инфраструктура"){
+            Container(Monitoring, "Мониторинг", "Prometheus + Grafana", "Метрики, логи, трассировки")
+            Container(ConfigSecretService, "Конфигурации и секреты",  "Управление конфигурациями и секретами")
+            Container(CICD, "Непрерывная интеграция и доставка", "GitHub / Gitlab, Jenkins", "Автоматические: сборка, тесты, развертывание (канареечное)")
+        }
+    }
+}
+
+Rel(User, WebPlatform, "API REST/Websocket")
+Rel(User, MobilePlatform, "API REST/Websocket")
+Rel(User, StreamingPlatform, "API REST/Websocket")
+
+Rel(WebPlatform, ProxyService, "API REST/Async")
+Rel(MobilePlatform, ProxyService, "API REST/Async")
+Rel(StreamingPlatform, ProxyService, "API REST/Async")
+
+Rel(ProxyService, BFFWeb, "API REST/Async")
+Rel(ProxyService, BFFMobile, "API REST/Async")
+Rel(ProxyService, BFFStreaming, "API REST/Async")
+
+Rel(BFFWeb, EventService, "Публикация, подписка событий")
+Rel(BFFMobile, EventService, "Публикация, подписка событий")
+Rel(BFFStreaming, EventService, "Публикация, подписка событий")
+
+Rel(ProxyService, ACLMonolith, "Постепенное сокращение трафика")
+Rel(MonolithSystem, MonolithDB, "Чтение/запись")
+
+Rel(EventService, Kafka, "Публикация, подписка событий")
+
+Rel(Kafka, MoviesService, "Обмен событиями")
+Rel(MoviesService, MoviesDB, "Чтение/запись")
+
+Rel(Kafka, SubscriptionService, "Обмен событиями")
+Rel(SubscriptionService, SubscriptionsDB, "Чтение/запись")
+
+Rel(Kafka, ContentService, "Обмен событиями")
+Rel(ContentService, ContentDB, "Чтение/запись")
+
+Rel(Kafka, PaymentService, "Обмен событиями")
+Rel(PaymentService, PaymentDB, "Чтение/запись")
+
+Rel(Kafka, AuthService, "Обмен событиями")
+Rel(Kafka, UserService, "Обмен событиями")
+Rel(UserService, UsersDB, "Чтение/запись")
+
+Rel(RecommendationSystem, Kafka, "Публикация событий")
+
+Rel_Back(infrastructure, k8s, "Управление инфраструктурой")
+@enduml

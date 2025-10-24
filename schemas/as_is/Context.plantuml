@@ -1,0 +1,28 @@
+@startuml
+title CinemaAbyss Context diagram
+
+top to bottom direction
+
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Deployment.puml
+
+!include ../lib/C4_Deployment.puml
+
+Person(User, "Пользователь", "Веб, приложение" )
+System(MonolithSystem, "Монолит", "Обработка пользователей, метаданных, платежей, подсписки")
+SystemDb(postgres, "PostgreSQL", "Общая база данных")
+
+System_Boundary(InTheProcess, "В процессе") {
+  Deployment_Node("k8s", "Kubernetes Cluster") {
+    System(EventService, "Events Service", "Publish/Subscribe события")
+    System(kafka, "Kafka", "Брокер сообщений для событий")
+    System(ProxyService, "Proxy API Gateway", "HTTP вход в кластер (маршрутизатор)")
+    Container(MoviesService, "Сервис фильмы", "Go", "Микросервис фильмов")
+  }
+}
+
+Rel(User, MonolithSystem, "Доступ к платформе")
+Rel(MonolithSystem, postgres, "Данные")
+
+SHOW_LEGEND()
+LAYOUT_WITH_LEGEND()
+@enduml
